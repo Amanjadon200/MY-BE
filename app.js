@@ -21,7 +21,7 @@ connectToDb((err) => {
 
 })
 
-app.get('/', (req, res) => {
+app.get('/tickets', (req, res) => {
     let tickets = [];
     console.log('hi')
     db.collection('ticketdata').find().forEach(ticket => {
@@ -34,7 +34,7 @@ app.get('/', (req, res) => {
     })
 })
 
-app.post('/', (req, res) => {
+app.post('/tickets', (req, res) => {
     const ticketToBeAdded = req.body;
     db.collection('ticketdata').insertOne(ticketToBeAdded).then((result) => {
         return res.json(result);
@@ -73,5 +73,24 @@ app.post('/register', async (req, res) => {
         }).catch((err) => {
             res.send({ "error": "can't add a document" })
         })
+    }
+})
+
+
+app.post('/logIn',async(req,res)=>{
+    const dataObject=req.body;
+    const email=dataObject.data.email
+    const password=dataObject.data.password;
+    const user= await db.collection('user').findOne({email:email})
+    if(user){
+        if(user.password===password){
+             res.status(200).send('user exist')
+        }
+        else{
+            res.status(401).send('password is wrong')
+        }
+    }
+    else{
+        res.status(404).send({'error':'user does not exit'})
     }
 })
