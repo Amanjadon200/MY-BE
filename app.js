@@ -1,11 +1,9 @@
 const express = require('express');
 const app = express();
 const { ObjectId } = require("mongodb")
-
 const { connectToDb, getDb } = require('./db.js')
 let db;
 app.use(express.json())
-// var cors = require('cors');
 const cors = require("cors");
 
 app.options("*", cors({ origin: 'http://localhost:3000', optionsSuccessStatus: 200 }));
@@ -23,9 +21,7 @@ connectToDb((err) => {
 
 app.get('/tickets', (req, res) => {
     let tickets = [];
-    console.log('hi')
     db.collection('ticketdata').find().forEach(ticket => {
-        console.log(ticket)
         tickets.push(ticket)
     }).then(() => {
         return res.json(tickets)
@@ -42,6 +38,24 @@ app.post('/tickets', (req, res) => {
         return res.json({ "error": "can't add a document" })
     })
 })
+app.delete('/tickets', async(req, res) => {
+    const ticketToBeDeleted = req.query.id;
+    let _id=''
+    await db.collection('ticketdata').find().forEach((ticket)=>{
+    if(parseInt(ticket.id)===parseInt(ticketToBeDeleted)){
+        _id=ticket._id
+        return;
+    }
+    })
+    const data=await db.collection('ticketdata').deleteOne({_id:new ObjectId(_id)})
+    if(data.acknowledged==true){
+        res.send('deleted')
+    }
+    else{
+        res.send("can't delete a document")
+    }
+})
+// res.json({ "error": "can't delete a document" })
 
 
 
@@ -59,16 +73,13 @@ app.post('/register', async (req, res) => {
     await db.collection('user').find().forEach(user => {
         if (user.email === userData.email) {
             a = 2;
-            console.log(user.email, "before********")
         }
     })
     if(a===2){
         res.send({ "error": "user already exists" })
     }
-    console.log('after')
     if (a === 1) {
         db.collection('user').insertOne(userData).then((result) => {
-            console.log(result, "after********")
             res.send(result);
         }).catch((err) => {
             res.send({ "error": "can't add a document" })
