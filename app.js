@@ -97,7 +97,7 @@ app.post('/logIn', async (req, res) => {
     const user = await db.collection('user').findOne({ email: email })
     if (user) {
         if (user.password === password) {
-            res.status(200).send({message:'user exist',name:user.name})
+            res.status(200).send({ message: 'user exist', name: user.name })
         }
         else {
             res.status(401).send('password is wrong')
@@ -107,19 +107,36 @@ app.post('/logIn', async (req, res) => {
         res.status(404).send({ 'error': 'user does not exit' })
     }
 })
+app.post('/updateUser', async (req, res) => {
+    const dataObject = req.body;
+    console.log(dataObject)
+    const email = dataObject.emai;
 
+    const user = await db.collection('user').updateOne({email}, {$set:dataObject})
+    console.log(user)
+    res.send(user)
+})
 
-const abc = function (a, b) {
-    return {
-        sum: function sum(a, b) {
-            return a + b
-        }
-    , 
-        subtraction: function subtraction(a, b) {
-            return a - b
-        }
-    }
-}
+app.get('/fetchUser',async(req,res)=>{
+    const id=req.query._id;
+    console.log(id);
+    let a=1;
+    const data=await db.collection('user').findOne({email:id})
+    console.log(data,"**")
+    res.send(data)
+})
+
+// const abc = function (a, b) {
+//     return {
+//         sum: function sum(a, b) {
+//             return a + b
+//         }
+//     ,
+//         subtraction: function subtraction(a, b) {
+//             return a - b
+//         }
+//     }
+// }
 // console.log(typeof abc())
 // const d=abc();
 // console.log(d,d.sum(2,3),d.subtraction(2,3))
