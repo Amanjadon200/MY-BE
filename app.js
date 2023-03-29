@@ -5,9 +5,10 @@ const app = express();
 const { ObjectId } = require("mongodb")
 const { connectToDb, getDb } = require('./db.js')
 let db;
+const fileUpload=require('express-fileupload')
 app.use(express.json())
+app.use(fileUpload())
 const cors = require("cors");
-
 app.options("*", cors({ origin: 'http://localhost:3000', optionsSuccessStatus: 200 }));
 
 app.use(cors({ origin: "http://localhost:3000", optionsSuccessStatus: 200 }));
@@ -109,23 +110,31 @@ app.post('/logIn', async (req, res) => {
 })
 app.post('/updateUser', async (req, res) => {
     const dataObject = req.body;
-    console.log(dataObject)
-    const email = dataObject.emai;
+    const email = dataObject.aboutData.email;
+    const phoneNumber = dataObject.aboutData.phoneNumber;
+    const gender = dataObject.aboutData.gender;
+    const name = dataObject.aboutData.name;
 
-    const user = await db.collection('user').updateOne({email}, {$set:dataObject})
-    console.log(user)
+    const user = await db.collection('user').updateOne({"email":email}, {$set:{"gender":gender,"phoneNumber":phoneNumber,password: dataObject.aboutData.password,"name":name}})
     res.send(user)
 })
 
 app.get('/fetchUser',async(req,res)=>{
     const id=req.query._id;
-    console.log(id);
     let a=1;
     const data=await db.collection('user').findOne({email:id})
-    console.log(data,"**")
     res.send(data)
 })
-
+app.post('/uploadImage',(req,res)=>{
+    const file=req.files.image;
+    const fileName=Date.now()+ req.files.image.name
+    const imgsrc = __dirname +"/uploads/"+fileName
+    file.mv(imgsrc,(err)=>{
+        if(err)
+            res.send('error')
+    })
+    res.send('uploaded')
+})
 // const abc = function (a, b) {
 //     return {
 //         sum: function sum(a, b) {
