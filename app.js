@@ -23,7 +23,9 @@ connectToDb((err) => {
 
 app.get('/tickets', (req, res) => {
     let tickets = [];
-    db.collection('ticketdata').find().forEach(ticket => {
+    const id=req.query.id;
+
+    db.collection('ticketdata').find({user_id:id}).forEach(ticket => {
         tickets.push(ticket)
     }).then(() => {
         return res.json(tickets)
@@ -34,6 +36,7 @@ app.get('/tickets', (req, res) => {
 
 app.post('/tickets', (req, res) => {
     const ticketToBeAdded = req.body;
+    // console.log(req.query,req.body)
     db.collection('ticketdata').insertOne(ticketToBeAdded).then((result) => {
         return res.json(result);
     }).catch((err) => {
@@ -98,7 +101,7 @@ app.post('/logIn', async (req, res) => {
     const user = await db.collection('user').findOne({ email: email })
     if (user) {
         if (user.password === password) {
-            res.status(200).send({ message: 'user exist', name: user.name })
+            res.status(200).send({ message: 'user exist', name: user.name,id:user._id })
         }
         else {
             res.status(401).send('password is wrong')
@@ -125,15 +128,17 @@ app.get('/fetchUser',async(req,res)=>{
     const data=await db.collection('user').findOne({email:id})
     res.send(data)
 })
-app.post('/uploadImage',(req,res)=>{
+app.post('/uploadImage',async(req,res)=>{
     const file=req.files.image;
     const fileName=Date.now()+ req.files.image.name
+    const email=req.query.email
     const imgsrc = __dirname +"/uploads/"+fileName
     file.mv(imgsrc,(err)=>{
         if(err)
             res.send('error')
     })
-    res.send('uploaded')
+    await db.collection('user').updateOne({"email":email}, {$set:{"Profile_Url":imgsrc}})
+    res.send({message:'uploaded',location:imgsrc})
 })
 // const abc = function (a, b) {
 //     return {
